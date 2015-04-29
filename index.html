@@ -126,7 +126,7 @@ By the way, that funny-looking question mark character that you've seen before i
 
 Decoders replace invalid bytes with this character.<br><br>
 
-Like how my browser makes the symbol monospace?
+Hehe look how it makes the symbol monospace
 </div>
 
 
@@ -146,6 +146,45 @@ Baudot was actually based off another 5-bit code invented by Gauss in 1834<sup>&
 </div>
 
 
+
+<div class="slide" style="height:60%">
+  <h1>Use somebody else's alphabet</h1>
+
+5-bit codes like baudot can only encode 32 symbols... Can the same alphabet encode multiple languages?
+
+<ul>
+  <li>We write English, French, and many other languages with the latin alphabet</li>
+  <li>Many languages use Arabic script including Persian, Urdu, and Arabic (the language)</li>
+</ul>
+
+<br>
+Of course switching a whole writing system is another matter...
+
+<ul>
+  <li>Korean Hangul alphabet was invented in 1443 and even today not 100% adopted</li>
+  <li>The Turkmen language changed from Arabic to Latin in 1929, then to the Cyrillic in 1938, then back to Latin in 1991</li>
+</ul>
+
+</div>
+
+
+
+<div class="slide" style="height:60%">
+  <h1>Necessity is the mother of invention...</h1>
+
+<table>
+  <tr><th>Russian</th><td>Живаго</td></tr>
+  <tr><th>Visual transliteration</th><td>}|{uBaro</td></tr>
+  <tr><th>Phonetic transliteration</th><td>Zhivago</td></tr>
+</table>
+
+<table>
+  <tr><th>Arabic script</th><td>تحكي عربي؟</td></tr>
+  <tr><th>Arabizi (chat alphabet)</th><td>ta7ki 3arabi?</td></tr>
+  <tr><th>Translation</th><td>Do you speak Arabic?</td></tr>
+</table>
+
+</div>
 
 
 
@@ -171,14 +210,13 @@ Sometimes not so much:
 
 
 
-
 <div class="slide" style="height:60%">
   <h1>Codebrian Explosion</h1>
 
 So there are all these languages, we need mappings from bit representations to their symbols.<br>
 
 <ul>
-  <li>Latin-1 (aka ISO 8859-1) covers "western" european languages like German and French (well, unless your name is LOUŸS)</li>
+  <li>Latin-1 covers "western" european languages like German and French (well, unless your name is LOUŸS)</li>
   <li>Windows-1252 (what people actually mean when they say "Latin-1"): Microsoft took latin-1 and squeezed in some essentials like ™ and Ÿ</li>
   <li>JIS family: Japanese character sets invented by ASCII Corporation (‽). Approximately 1% of all web-pages use these.</li>
   <li>ISCII: Indian Script Code for Information Interchange</li>
@@ -189,48 +227,45 @@ So there are all these languages, we need mappings from bit representations to t
 <div class="slide" style="height:60%">
   <h1>Code-pages</h1>
 
-ISO 2022
-  echo -e "\x1B(0 \x1Bc"
-</div>
-
-
-<div class="slide" style="height:60%">
-  <h1>Use somebody else's alphabet</h1>
-
-Clearly having all these different character sets won't scale, how about we use the same alphabet for different languages?
-
 <ul>
-  <li>We write English, French, and many other languages with the latin alphabet</li>
-  <li>Many languages use Arabic script including Persian, Urdu, and Arabic (the language)</li>
+  <li>There are actually Latin-2, Latin-3, etc (aka ISO-8859-X)</li>
+  <li>See handy unix man-pages: ascii(7), latin1(7), latin2(2), etc</li>
 </ul>
 
 <br>
-Of course switching a whole country is another matter, but...
 
-<ul>
-  <li>Korean Hangul alphabet was invented and adopted in 1443</li>
-  <li>The Turkmen language changed from Arabic to Latin in 1929, then to the Cyrillic in 1938, then back to Latin in 1991</li>
-</ul>
+Have you ever catted a binary file to a unix terminal and had your prompt screwed up?<br><br>
 
+<pre>
+doug@hcsw:~$ echo -e "\x1B(0"
+
+␍┤±@␤␌┬:·$ 
+</pre>
+
+<br>
+
+This is because of escape codes triggering ISO 2022 code-page switching in your terminal (where multiple character-sets can be tunneled over a 7-bit transport)<br>
+<b>Bonus question</b>: How do you fix it?
 </div>
 
 
 <div class="slide" style="height:60%">
-  <h1>Necessity is the mother of invention...</h1>
+  <h1>How to repair your terminal</h1>
 
-<table>
-  <tr><th>Russian</th><td>Живаго</td></tr>
-  <tr><th>Visual transliteration</th><td>}|{uBaro</td></tr>
-  <tr><th>Phonetic transliteration</th><td>Zhivago</td></tr>
-</table>
+<b>Answer:</b><br><br>
 
-<table>
-  <tr><th>Arabic script</th><td>تحكي عربي؟</td></tr>
-  <tr><th>Arabizi (chat alphabet)</th><td>ta7ki 3arabi?</td></tr>
-  <tr><th>Translation</th><td>Do you speak Arabic?</td></tr>
-</table>
+You echo the appropriate ISO 2022 reset sequence of course:<br><br>
+
+<pre>
+echo -e "\x1Bc"
+</pre>
+
+<br>
+
+Or, if for some reason you can't remember that, there is the <b>/usr/bin/reset</b> command
 
 </div>
+
 
 
 
@@ -278,9 +313,19 @@ Any unicode code-point can be represented in various ways:
 
 
 <div class="slide" style="height:60%">
-  <h1>Unicode compression</h1>
+  <h1>Stateful encoding</h1>
 
-SCSU, BOCU-1
+An idea for encoding unicode that never really took off is stateful encoding.<br><br>
+
+<b>Standard Compression Scheme for Unicode</b>: This mode maps the byte values 128–255 to a window of unicode code-points and has special shifter commands to change where this window points.<br><br>
+
+<b>Binary Ordered Compression for Unicode</b>: This mode encodes the full value of the first unicode code-point, and then records the code-point differences. For example, the string <b>ABCDCBA</b> becomes the following sequence of code-points:<br>
+
+<pre>
+  65  1  1  1  -1  -1  -1
+</pre>
+
+This is similar to image gradient filters: Runs of similar numbers compress well.
 </div>
 
 
@@ -311,7 +356,7 @@ Default python build exposes UTF-16 <i>surrogate pairs</i>:
 <pre>
 >>> print sys.maxunicode
 65535
->>> print len(u"💩")
+>>> print len(u"𝔸")
 2
 </pre>
 
@@ -320,7 +365,7 @@ Python built with --enable-unicode=ucs4
 <pre>
 >>> print sys.maxunicode
 1114111
->>> print len(u"💩")
+>>> print len(u"𝔸")
 1
 </pre>
 </div>
@@ -333,7 +378,7 @@ Python built with --enable-unicode=ucs4
 Because of the UTF-16 curse, Python can cut code-points in half:
 
 <pre>
->>> print u"💩"[0:1]
+>>> print u"𝔸"[0:1]
 �
 </pre>
 
@@ -452,10 +497,11 @@ In English we think of accents as decorative fluff, but they are fundamental to 
 <div class="slide">
   <h1>Combining Characters: Misc</h1>
 
-Unicode 8 will even introduce combining characters change the skin colours of emoji:
+Unicode 8 will introduce combining characters to change the skin colours of emoji:
 
 <img src="img/person.png"><img height=300px width=300px src="img/swatch-type-5.png"> <span style="font-size: 300px">→</span> <img src="img/person-5.png">
 </div>
+
 
 
 <div class="slide">
@@ -471,14 +517,6 @@ To complicate things more, often there are multiple representations for the same
 </ul>
 </div>
 
-
-
-<div class="slide">
-  <h1>Extended Grapheme Clusters</h1>
-
-Hangul is special cased. Show the regexp.
-regional identifiers
-</div>
 
 
 <div class="slide">
@@ -499,6 +537,83 @@ say Dumper(NFC("e\x{34f}\x{301}"));
   <li>Also prevents the re-ordering of combining marks &mdash; don't ask</li>
 </ul>
 </div>
+
+
+
+<div class="slide">
+  <h1>Extended Grapheme Clusters</h1>
+
+So what is a "character" in unicode?
+
+<ul>
+  <li>Byte? No. Unicode works at a higher level than bytes.</li>
+  <li>Code-point? No. Code-points can combine together to make single letters.</li>
+  <li>The closest thing unicode specifies to a character is called an <b>extended grapheme cluster</b> and is specified by the TR29 Unicode standard "Unicode Text Segmentation"</li>
+  <li>It's "extended" as opposed to "legacy" (they had to change the rules)</li>
+</ul>
+
+</div>
+
+
+
+
+<div class="slide">
+  <h1>TR29 EGC Regexp</h1>
+
+Here is the regexp to validate a EGC, straight out of the TR29 report:
+
+<div style="font-size: 40%">
+  <table cellspacing="0" cellpadding="2" border="0" id="table7"> 
+	<tr>
+      <th valign="top">Term</th>
+      <th valign="top" width="19%">Regex</th>
+      <th valign="top" width="49%">Notes</th>
+    </tr>
+    <tr>
+      <td valign="top">combining character sequence</td>
+      <td><code>base? ( Mark | ZWJ | ZWNJ )+</code></td>
+      <td>A single base character is <i>not</i> a 
+		combining character sequence. 
+		However, a single 
+		combining mark <i>is</i> a (degenerate) combining character sequence.</td>
+    </tr>
+    <tr>
+      <td valign="top">extended combining character 
+		sequence</td>
+      <td><code>extended_base? ( Mark | ZWJ | ZWNJ )+</code></td>
+      <td>extended_base includes Hangul Syllables</td>
+    </tr>
+    <tr>
+      <td valign="top">legacy grapheme cluster</td>
+      <td><code>( CRLF <br>
+		| ( RI-sequence<br>
+| Hangul-Syllable<br>
+| !Control ) <br>
+&nbsp; Grapheme_Extend* <br>
+		| . )</code></td>
+      <td>A single base character is a grapheme 
+		cluster. Degenerate cases include any isolated non-base characters, 
+		and non-base characters like controls.</td>
+    </tr>
+    <tr>
+      <td valign="top">extended grapheme cluster</td>
+      <td><code>( CRLF <br>
+        | <b>Prepend*</b><br> 
+        &nbsp;&nbsp;( RI-sequence<br>
+        | Hangul-Syllable<br>
+| !Control ) <br>
+          &nbsp; ( Grapheme_Extend<br>
+          <b>| SpacingMark</b> )*<br>
+        | . )</code></td>
+      <td>Extended grapheme clusters add prepending and spacing marks</td>
+    </tr>
+    </table>
+</div>
+</div>
+
+
+
+
 
 
 <div class="slide">
