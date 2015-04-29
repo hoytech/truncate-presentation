@@ -111,8 +111,8 @@ There are other problems with such truncation too, as we'll see.
 The problem with truncating <b>after</b> encoding is it can corrupt text by cutting in inappropriate places:
 
 <pre style="padding-top: 50px; padding-bottom: 50px">
-$ perl -MEncode -Mutf8 -E 'my $enc = encode("UTF-8", "λ");
-                           say substr($enc, 0, 1);'
+$ perl -MEncode -Mutf8 -E 'my $e = encode("UTF-8", "λ");
+                           say substr($e, 0, 1);'
 �
 </pre>
 
@@ -285,13 +285,13 @@ Unicode did the computer-sciency thing and abstracted characters away from their
 
 <br>
 
-<table><tr><td>
+<table><tr><th style="font-size:70%" valign=top>
 
 Although you could argue that the 19th century Chinese telegraph code was the first use of "code-points" in the unicode sense
 
-</td><td>
+</th><td>
 
-<img src="img/mullaney_telegraph_image02.jpg">
+<img height="400px" width="600px" src="img/mullaney_telegraph_image02.jpg">
 
 </td></tr></table>
 </div>
@@ -350,7 +350,8 @@ This is similar to image gradient filters: Runs of similar numbers compress well
 When the decoding doesn't match the encoding you get annoyingly screwed up text like:
 
 <pre style="line-height: 1.8">
-$ perl -MEncode -E 'use encoding "utf-8"; say encode("utf8", "文字化け")'
+$ perl -MEncode -E 'use encoding "utf-8";
+                    say encode("utf8", "文字化け")'
 æå­åã
 </pre>
 
@@ -471,7 +472,7 @@ In amateur radio there is an encoding called <i>Varicode</i> which is self-synch
 
 How do you generate codes that don't contain a <b>00</b> (or <b>11</b>) bit sequence? With the Fibonacci sequence of course (did you think it was just for recursion homework? &#x1F601;)<br><br>
 
-Suppose we want the code for code-point 17. Pick the largest fibbonaci number less than or equal to 17 and subtract this number. Repeat for the remainder until there is none:
+Suppose we want the code for 17. Pick the largest fibbonaci number &#x2264; 17 and subtract this number. Repeat until remainder is 0:
 
 <table>
 <tr><th></th><th>1</th><th>2</th><th>3</th><th>5</th><th>8</th><th>13</th><th>21</th><th></th></tr>
@@ -532,9 +533,11 @@ In English we think of accents as decorative fluff, but they are fundamental to 
 <div class="slide">
   <h1>Combining Characters: Misc</h1>
 
-Unicode 8 will introduce combining characters to change the skin colours of emoji:
+Unicode 8 will introduce combining characters to change the skin colours of emoji:<br>
 
-<img src="img/person.png"><img height=300px width=300px src="img/swatch-type-5.png"> <span style="font-size: 300px">→</span> <img src="img/person-5.png">
+<center>
+<img height=200px width=200px src="img/person.png"><img height=200px width=200px src="img/swatch-type-5.png"> <span style="font-size: 200px">→</span> <img height=200px width=200px src="img/person-5.png">
+</center>
 </div>
 
 
@@ -578,14 +581,14 @@ say Dumper(NFC("e\x{34f}\x{301}"));
 <div class="slide">
   <h1>How many bytes can a char take up?</h1>
 
-<table><tr><td style="color:black; font-size: 80%" width="30%" valign=top>
+<table><tr><td style="color:black; font-size: 70%" width="30%" valign=top>
 <ul>
   <li align=left>Technically no limit to number of combining characters</li>
   <li align=left>UAX-15 recommends a limit of 30</li>
   <li align=left>Largest "legitimate" use is Tibetan character with 8 combining marks</li>
 </ul>
 </td><td>
-<img width="100%" height="100%" src="img/combining-char-attack.jpg">
+<img width="95%" height="95%" src="img/combining-char-attack.jpg">
 </td></tr></table>
 </div>
 
@@ -664,6 +667,21 @@ Here is the regexp to validate an EGC, straight out of the TR29 report:
 
 
 
+<div class="slide">
+  <h1>EGC Special-Cases</h1>
+
+As you can see from this regexp, there are a couple special cases in the segmentation standard:
+
+<ul>
+  <li>
+    <b>Hangul Syllable</b>: Hangul (a Korean script) uses "Jamo", special vowel and consonant strokes used to create Hangul syllables that aren't available as composed characters in Unicode, and their formulation requires some special segmentationn logic.
+  </li>
+  <li>
+    <b>Regional Indicators</b>: These are 26 code-points that correspond to letters and when combined indicate ISO 3166 country codes. They are primarily for round-tripping between character sets that assign code-points to various countries.
+  </li>
+</ul>
+</div>
+
 
 
 
@@ -728,6 +746,20 @@ lib/Unicode/Truncate.pm
 </pre>
 </div>
 
+
+<div class="slide">
+  <h1>Unicode test suites</h1>
+
+The Unicode Consortium maintains many large test files for implementations to check their conformance to Unicode standards ("unidata").<br><br>
+
+Unicode::Truncate ships the <b>GraphemeBreakTest.txt</b> file from Unicode 7.0 which is full of hundreds of lines like this:<br><br>
+
+<pre>
+÷ 0020 × 0308 ÷ 0020 ÷
+</pre>
+
+The above indicates that you <i>can</i> (÷) break before the first and third code-points, but <i>cannot</i> (×) before the second (since it's a combining character).
+</div>
 
 
 <div class="slide">
