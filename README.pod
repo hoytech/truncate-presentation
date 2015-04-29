@@ -1,0 +1,13 @@
+=encoding utf-8
+
+=head1 NAME
+
+truncate-presentation - Presentation about Unicode::Truncate
+
+=head1 VIEW
+
+http://hoytech.github.io/truncate-presentation
+
+=head1 SOURCE
+
+https://github.com/hoytech/truncate-presentation/tree/gh-pages
