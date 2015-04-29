@@ -90,14 +90,20 @@ Oh? You thought this talk would be about something useful? 😄😄😄
 <div class="slide">
   <h1>Truncating before encoding</h1>
 
-The problem with truncating <b>before</b> encoding is you have no idea how long the encoded string is:
+The problem with truncating <b>before</b> encoding is you have no idea how long the encoded string is in terms of bytes:
 
 <pre style="padding-top: 50px; padding-bottom: 50px">
-length(encode("UTF-8", $my_string)) == ???
+length(encode("UTF-8", substr($my_string, 0, 10)))
+  ==
+ ????
 </pre>
 
-This value depends on how many "high" code-points are in the string, how "high" those code-points are, the normalisation form chosen, and (relatedly) how many combining marks are used.
+<br>
+
+There are other problems with such truncation too, as we'll see.
+
 </div>
+
 
 <div class="slide">
   <h1>Truncating after encoding</h1>
@@ -109,13 +115,15 @@ $ perl -MEncode -Mutf8 -E 'my $enc = encode("UTF-8", "λ");
                            say substr($enc, 0, 1);'
 �
 </pre>
+
+If you try to insert such truncated text in a DB, you'll probably get a DB error.
 </div>
 
 
 <div class="slide">
   <h1>Replacement character</h1>
 
-By the way, that funny-looking question mark character that you've seen before is actually its own unicode code point (U+FFFD) called the "replacement character":
+By the way, that funny-looking question mark character that you've seen before is actually your terminal replacing an invalid byte with a special unicode character called the "replacement character" (U+FFFD):
 
 <div style="font-size: 400%; padding-top: 50px; padding-bottom: 50px">
 �
@@ -125,8 +133,6 @@ By the way, that funny-looking question mark character that you've seen before i
 </div>
 
 Decoders replace invalid bytes with this character.<br><br>
-
-Hehe look how it makes the symbol monospace
 </div>
 
 
@@ -170,6 +176,27 @@ Of course switching a whole writing system is another matter...
 
 
 <div class="slide" style="height:60%">
+  <h1>Funny looking letters</h1>
+
+It has been apparent for some amount of time (at least to non-americans &#x1f609;) that people may wish to use non-latin characters. For example, russian-speakers adapted morse code to their alphabet and sometimes it worked out:<br><br>
+
+<table>
+  <tr><th>English</th><th>Morse Code</th><th>Russian</th></tr>
+  <tr><td>P</td><td>· − − ·</td><td>П</td></tr>
+</table>
+
+Sometimes not so much:
+
+<table>
+  <tr><th>English</th><th>Morse Code</th><th>Russian</th></tr>
+  <tr><td>V</td><td>· · · −</td><td>Ж</td></tr>
+</table>
+
+</div>
+
+
+
+<div class="slide" style="height:60%">
   <h1>Necessity is the mother of invention...</h1>
 
 <table>
@@ -188,24 +215,6 @@ Of course switching a whole writing system is another matter...
 
 
 
-<div class="slide" style="height:60%">
-  <h1>Funny looking letters</h1>
-
-It has been apparent for some amount of time (at least to non-americans &#x1f609;) that people may wish to use non-latin characters. For example, russian-speakers adapted morse code to their alphabet and sometimes it worked out:<br><br>
-
-<table>
-  <tr><th>English</th><th>Morse Code</th><th>Russian</th></tr>
-  <tr><td>P</td><td>· − − ·</td><td>П</td></tr>
-</table>
-
-Sometimes not so much:
-
-<table>
-  <tr><th>English</th><th>Morse Code</th><th>Russian</th></tr>
-  <tr><td>V</td><td>· · · −</td><td>Ж</td></tr>
-</table>
-
-</div>
 
 
 
@@ -262,7 +271,7 @@ echo -e "\x1Bc"
 
 <br>
 
-Or, if for some reason you can't remember that, there is the <b>/usr/bin/reset</b> command
+Or, if for some reason you can't remember that, there is the <b>reset</b> command
 
 </div>
 
@@ -272,13 +281,19 @@ Or, if for some reason you can't remember that, there is the <b>/usr/bin/reset</
 <div class="slide" style="height:60%">
   <h1>Fundamental Invention of Unicode</h1>
 
-Rather than being yet another mapping from bit patterns to characters, Unicode did the computer-sciency thing and abstracted characters away from their bit pattern encodings.
+Unicode did the computer-sciency thing and abstracted characters away from their bit pattern representations.
 
-<br><br>
+<br>
 
-Although you could argue that the 19th century Chinese telegraph code was the first use of "code-points" in the unicode sense:
+<table><tr><td>
 
-<center><img src="img/mullaney_telegraph_image02.jpg"></center>
+Although you could argue that the 19th century Chinese telegraph code was the first use of "code-points" in the unicode sense
+
+</td><td>
+
+<img src="img/mullaney_telegraph_image02.jpg">
+
+</td></tr></table>
 </div>
 
 
@@ -307,7 +322,7 @@ Any unicode code-point can be represented in various ways:
   <tr><td>%</td><td>00 25</td><td>00 25</td><td>25</td></tr>
   <tr><td>&#x25a;</td><td>02 5A</td><td>02 5A</td><td>C9 9A</td></tr>
   <tr><td>&#x2030;</td><td>20 30</td><td>20 30</td><td>E2 80 B0</td></tr>
-  <tr><td>&#x1f4c0;</td><td>&mdash;</td><td>D8 3D DC C0</td><td>F0 9F 93 80</td></tr>
+  <tr><td>&#x1f4c0;</td><td>∅</td><td>D8 3D DC C0</td><td>F0 9F 93 80</td></tr>
 </table>
 </div>
 
@@ -315,7 +330,7 @@ Any unicode code-point can be represented in various ways:
 <div class="slide" style="height:60%">
   <h1>Stateful encoding</h1>
 
-An idea for encoding unicode that never really took off is stateful encoding.<br><br>
+An idea for encoding unicode that never really took off (except arguably ISO 2022) is stateful encoding.<br><br>
 
 <b>Standard Compression Scheme for Unicode</b>: This mode maps the byte values 128–255 to a window of unicode code-points and has special shifter commands to change where this window points.<br><br>
 
@@ -344,6 +359,7 @@ The Japanese (who have suffered much more encoding anguish than we have) have a 
 Also why the heck are things like &#x2614; (U+2614) in Unicode? You can thank the Japanese for that too: They are in there to round-trip with Japanese character sets.
 
 </div>
+
 
 
 <div class="slide" style="height:60%">
@@ -405,18 +421,33 @@ $ perl -CAS -E 'say "\x{1f4a9}"'
 <div class="slide">
   <h1>UTF-8</h1>
 
-UCS-2 can't even represent all of unicode, and UTF-16 has numerous issues. One of which is that it can contain "NUL bytes" and therefore don't play well with C APIs that use NUL bytes as string terminators, for example in file/directory names.<br><br>
+UCS-2 can't even represent all of unicode, and UTF-16 has numerous issues. One of which is that it can contain &#x2400; bytes and therefore don't play well with C APIs that use &#x2400; bytes as string terminators, for example in file/directory names.<br><br>
 
 UTF-8 was developed as a solution to this problem. In fact, it was originally called FSS-UTF (File System Safe UCS Transformation Format).
 
 <ul>
-  <li>No NUL bytes</li>
+  <li>No &#x2400; bytes</li>
   <li>ASCII compatible</li>
   <li>No "byte order marks" needed</li>
   <li>Self-synchronising</li>
   <li>Invented by Ken Thompson on a napkin in a restaurant</li>
 </ul>
 </div>
+
+
+
+<div class="slide">
+  <h1>Over-long UTF-8</h1>
+
+For security it's important to validate that UTF-8 is valid. A naive UTF-8 parser could allow multiple representations for a single character. All but the shortest representations are called "over-long" and are illegal UTF-8.<br><br>
+
+<ul>
+<li>Classic example is a web-server that checks for the string <b>/..</b> pre-decoding. If UTF-8 wasn't properly validated then the string <b>/%c0%ae.</b> might decode to the bad string, but pass through the check.</li>
+<li>Java stuff often uses "modified" UTF-8 where the &#x2400; byte is encoded as <b>C0 80</b></li>
+<li>You used to be able to see CGI source code by download <b>/file.cgi%00</b>. After they fixed it, on some web-servers you could still see it with <b>/file.cgi%c0%80</b></li>
+</ul>
+</div>
+
 
 
 <div class="slide">
@@ -429,7 +460,7 @@ In amateur radio there is an encoding called <i>Varicode</i> which is self-synch
 <ul>
   <li>UTF-8 is variable bytes per character, Varicode is variable bits</li>
   <li>More common characters get shorter codes, just like morse code. Space (U+0020) is 1 bit long: <b>1</b>. e (U+0065) is <b>11</b>. ^ (U+005E) is <b>1010111111</b></li>
-  <li>No code will contain the bit sequence "00" because this is the character separator</li>
+  <li>No code can contain the bit sequence <b>00</b> because this is the character separator</li>
 </ul>
 
 </div>
@@ -478,19 +509,23 @@ Truncating after the second code-point would drop the accent which is a serious 
 
 In English we think of accents as decorative fluff, but they are fundamental to the encoding of some languages such as Thai:<br><br>
 
-<ul><li>
-"\x{E19}\x{E35}\x{E49}" :
-นี้
-<br>Nī̂ &mdash; "this"
-</li><li>
-"\x{E19}\x{E35}" :
-นี
-<br>Nī &mdash; "nice"
-</li><li>
+<ul>
+<li>
 \x{E19} :
 น
 <br>N &mdash; "the"
-</li></ul>
+</li>
+<li>
+"\x{E19}\x{E35}" :
+นี
+<br>Nī &mdash; "nice"
+</li>
+<li>
+"\x{E19}\x{E35}\x{E49}" :
+นี้
+<br>Nī̂ &mdash; "this"
+</li>
+</ul>
 </div>
 
 
@@ -541,15 +576,31 @@ say Dumper(NFC("e\x{34f}\x{301}"));
 
 
 <div class="slide">
+  <h1>How many bytes can a char take up?</h1>
+
+<table><tr><td style="color:black; font-size: 80%" width="30%" valign=top>
+<ul>
+  <li align=left>Technically no limit to number of combining characters</li>
+  <li align=left>UAX-15 recommends a limit of 30</li>
+  <li align=left>Largest "legitimate" use is Tibetan character with 8 combining marks</li>
+</ul>
+</td><td>
+<img width="100%" height="100%" src="img/combining-char-attack.jpg">
+</td></tr></table>
+</div>
+
+
+
+
+<div class="slide">
   <h1>Extended Grapheme Clusters</h1>
 
-So what is a "character" in unicode?
+So what is a "character" in unicode? Byte? No. Unicode works at a higher level than bytes. Code-point? No. Code-points can combine together to make single letters.
 
 <ul>
-  <li>Byte? No. Unicode works at a higher level than bytes.</li>
-  <li>Code-point? No. Code-points can combine together to make single letters.</li>
   <li>The closest thing unicode specifies to a character is called an <b>extended grapheme cluster</b> and is specified by the TR29 Unicode standard "Unicode Text Segmentation"</li>
   <li>It's "extended" as opposed to "legacy" (they had to change the rules)</li>
+  <li>If you want to cut unicode in between what users see as "glyphs" then between two EGCs is the best place to cut (unless you have special insight into the font rendering engine)</li>
 </ul>
 
 </div>
@@ -560,7 +611,7 @@ So what is a "character" in unicode?
 <div class="slide">
   <h1>TR29 EGC Regexp</h1>
 
-Here is the regexp to validate a EGC, straight out of the TR29 report:
+Here is the regexp to validate an EGC, straight out of the TR29 report:
 
 <div style="font-size: 40%">
   <table cellspacing="0" cellpadding="2" border="0" id="table7"> 
@@ -617,35 +668,26 @@ Here is the regexp to validate a EGC, straight out of the TR29 report:
 
 
 <div class="slide">
-  <h1>How many bytes can a char take up?</h1>
+  <h1>Unicode::Truncate</h1>
 
-<table><tr><td style="color:black; font-size: 80%" width="30%" valign=top>
+My module <i>Unicode::Truncate</i>:
+
 <ul>
-  <li align=left>Technically no limit to number of combining characters</li>
-  <li align=left>UAX-15 recommends a limit of 30</li>
-  <li align=left>Largest "legitimate" use is Tibetan character with 8 combining marks</li>
+  <li>Truncates UTF-8 text to fit within fixed byte-lengths</li>
+  <li>Can optionally append ellipsis to indicate truncation (…)</li>
+  <li>Always truncates between Extended Grapheme Clusters</li>
+  <li>Does single pass over encoded UTF-8 text, validating as it goes</li>
+  <li>Can modify string "in place" to avoid copy</li>
+  <li>Passes Unicode 7 TR29's segmentation test-suite</li>
 </ul>
-</td><td>
-<img width="100%" height="100%" src="img/combining-char-attack.jpg">
-</td></tr></table>
-</div>
-
-
-
-<div class="slide">
-  <h1>Over-long UTF-8</h1>
-</div>
-
-
-
-<div class="slide">
-  <h1>IDN homograph attacks</h1>
 </div>
 
 
 
 <div class="slide">
   <h1>Inline::C</h1>
+
+A bit of a detour:<br><br>
 
 <pre>
 use Inline C;
@@ -675,11 +717,26 @@ __C__
 </div>
 
 
-<div class="slide">
-  <h1>Unicode::Truncate</h1>
 
-  Code walk-through...<br><br>
+<div class="slide">
+  <h1>Let's look at the code</h1>
+
+Code walk-through:
+
+<pre>
+lib/Unicode/Truncate.pm
+</pre>
 </div>
+
+
+
+<div class="slide">
+  <h1>Questions/Comments?</h1>
+<div style="font-size: 700%; text-align: center">
+𝒻𝒾𝓃
+</div>
+</div>
+
 
 
 </div>
