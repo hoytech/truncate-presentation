@@ -1,0 +1,19 @@
+Doug Hoyte: Truncating Unicode -- Suppose you need to truncate an arbitrary-length unicode string to fit into a fixed byte-length field. In this talk I introduce the Unicode::Truncate module, but not after we go down a deep rabbit-hole of unicode topics including encodings, surrogate pairs, over-long UTF-8, combining characters, normalisation forms, extended grapheme clusters, and unicode consortium test-suites. Are there security implications of unicode? How many bytes can a single unicode character take? Which writing system is special-cased in the unicode segmentation standard? In addition, we'll go over state-machine parsing with Ragel and the Inline::Filters::Ragel module, distributing Inline modules with Inline::Module::LeanDist, perl's "utf8 flag", and zero-copy string truncation.
+
+latin-X -> ISCII -> UTF-1 -> ISO 2022 -> terminals
+  echo -e "\x1B(0 \x1Bc"
+SCSU, BOCU-1 compression
+
+
+
+
+Certain emoji have defined variation sequences, where an emoji character can be followed by one of two invisible emoji variation selectors:
+
+U+FE0E for a text presentation
+U+FE0F for an emoji presentation
+
+regional identifier / skin colour modifier
+
+
+
+https://en.wikipedia.org/wiki/IDN_homograph_attack

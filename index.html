@@ -1,0 +1,572 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>Truncating Unicode</title>
+<!-- metadata -->
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<meta name="generator" content="S5" />
+<meta name="version" content="S5 1.1" />
+<!-- configuration parameters -->
+<meta name="defaultView" content="slideshow" />
+<meta name="controlVis" content="hidden" />
+<!-- style sheet links -->
+<link rel="stylesheet" href="ui/default/slides.css" type="text/css" media="projection" id="slideProj" />
+<link rel="stylesheet" href="ui/default/outline.css" type="text/css" media="screen" id="outlineStyle" />
+<link rel="stylesheet" href="ui/default/print.css" type="text/css" media="print" id="slidePrint" />
+<link rel="stylesheet" href="ui/default/opera.css" type="text/css" media="projection" id="operaFix" />
+<!-- S5 JS -->
+<script src="ui/default/slides.js" type="text/javascript"></script>
+
+
+<style>
+table {
+width:90%;
+border-top:1px solid #e5eff8;
+border-right:1px solid #e5eff8;
+margin:1em auto;
+border-collapse:collapse;
+font-family: sans;
+}
+td {
+color:#678197;
+border-bottom:1px solid #e5eff8;
+border-left:1px solid #e5eff8;
+padding:.3em 1em;
+text-align:center;
+}
+</style>
+
+
+</head>
+<body>
+
+<div class="layout">
+<div id="controls"><!-- DO NOT EDIT --></div>
+<div id="currentSlide"><!-- DO NOT EDIT --></div>
+<div id="header"></div>
+<div id="footer">
+<h1>Truncating Unicode</h1>
+</div>
+
+</div>
+
+
+<div class="presentation">
+
+<div class="slide">
+  <center>
+  <h1 style="font-size: 300%">Truncating Unicode</h1>
+  <br>
+  <h2>Doug Hoyte</h2>
+  </center>
+</div>
+
+
+<div class="slide">
+  <h1>The easiest problem in the world</h1>
+
+This talk is about truncating strings.
+
+<pre style="padding-top: 50px; padding-bottom: 50px">
+  my $output = substr($unicode_string, 0, $max_length);
+</pre>
+
+What could possibly go wrong with that? This talk is about:
+
+<ul>
+  <li>What could possibly go wrong with that</li>
+  <li>Unicode trivia</li>
+</ul>
+
+<br><br>
+Oh? You thought this talk would be about something useful? 😄😄😄
+
+</div>
+
+
+<div class="slide">
+  <h1>Truncating before encoding</h1>
+
+The problem with truncating <b>before</b> encoding is you have no idea how long the encoded string is:
+
+<pre style="padding-top: 50px; padding-bottom: 50px">
+length(encode("UTF-8", $my_string)) == ???
+</pre>
+
+This value depends on how many "high" code-points are in the string, how "high" those code-points are, the normalisation form chosen, and (relatedly) how many combining marks are used.
+</div>
+
+<div class="slide">
+  <h1>Truncating after encoding</h1>
+
+The problem with truncating <b>after</b> encoding is it can corrupt text by cutting in inappropriate places:
+
+<pre style="padding-top: 50px; padding-bottom: 50px">
+$ perl -MEncode -Mutf8 -E 'my $enc = encode("UTF-8", "λ");
+                           say substr($enc, 0, 1);'
+�
+</pre>
+</div>
+
+
+<div class="slide">
+  <h1>Replacement character</h1>
+
+By the way, that funny-looking question mark character that you've seen before is actually its own unicode code point (U+FFFD) called the "replacement character":
+
+<div style="font-size: 400%; padding-top: 50px; padding-bottom: 50px">
+�
+<pre style="display: inline">
+�
+</pre>
+</div>
+
+Decoders replace invalid bytes with this character.<br><br>
+
+Like how my browser makes the symbol monospace?
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>In the beginning there was ASCII...</h1>
+
+Well actually, in the beginning there was baudot, a 5-bit character encoding invented in 1870<sup>*</sup>. This code was designed to be used by telegraphs and is still in use by radio amateurs.<br><br>
+
+Baudot was actually based off another 5-bit code invented by Gauss in 1834<sup>&#8224;</sup> which was in turn based off a 5-bit code invented by Francis Bacon in 1623<sup>&#8225;</sup>.
+
+<div style="position:absolute; bottom:0px">
+* Not a typo</br>
+&#8224; Not a typo</br>
+&#8225; Still not a typo</br>
+</div>
+
+</div>
+
+
+
+
+
+<div class="slide" style="height:60%">
+  <h1>Funny looking letters</h1>
+
+It has been apparent for some amount of time (at least to non-americans &#x1f609;) that people may wish to use non-latin characters. For example, russian-speakers adapted morse code to their alphabet and sometimes it worked out:<br><br>
+
+<table>
+  <tr><th>English</th><th>Morse Code</th><th>Russian</th></tr>
+  <tr><td>P</td><td>· − − ·</td><td>П</td></tr>
+</table>
+
+Sometimes not so much:
+
+<table>
+  <tr><th>English</th><th>Morse Code</th><th>Russian</th></tr>
+  <tr><td>V</td><td>· · · −</td><td>Ж</td></tr>
+</table>
+
+</div>
+
+
+
+
+
+<div class="slide" style="height:60%">
+  <h1>Codebrian Explosion</h1>
+
+So there are all these languages, we need mappings from bit representations to their symbols.<br>
+
+<ul>
+  <li>Latin-1 (aka ISO 8859-1) covers "western" european languages like German and French (well, unless your name is LOUŸS)</li>
+  <li>Windows-1252 (what people actually mean when they say "Latin-1"): Microsoft took latin-1 and squeezed in some essentials like ™ and Ÿ</li>
+  <li>JIS family: Japanese character sets invented by ASCII Corporation (‽). Approximately 1% of all web-pages use these.</li>
+  <li>ISCII: Indian Script Code for Information Interchange</li>
+</ul>
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>Code-pages</h1>
+
+ISO 2022
+  echo -e "\x1B(0 \x1Bc"
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>Use somebody else's alphabet</h1>
+
+Clearly having all these different character sets won't scale, how about we use the same alphabet for different languages?
+
+<ul>
+  <li>We write English, French, and many other languages with the latin alphabet</li>
+  <li>Many languages use Arabic script including Persian, Urdu, and Arabic (the language)</li>
+</ul>
+
+<br>
+Of course switching a whole country is another matter, but...
+
+<ul>
+  <li>Korean Hangul alphabet was invented and adopted in 1443</li>
+  <li>The Turkmen language changed from Arabic to Latin in 1929, then to the Cyrillic in 1938, then back to Latin in 1991</li>
+</ul>
+
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>Necessity is the mother of invention...</h1>
+
+<table>
+  <tr><th>Russian</th><td>Живаго</td></tr>
+  <tr><th>Visual transliteration</th><td>}|{uBaro</td></tr>
+  <tr><th>Phonetic transliteration</th><td>Zhivago</td></tr>
+</table>
+
+<table>
+  <tr><th>Arabic script</th><td>تحكي عربي؟</td></tr>
+  <tr><th>Arabizi (chat alphabet)</th><td>ta7ki 3arabi?</td></tr>
+  <tr><th>Translation</th><td>Do you speak Arabic?</td></tr>
+</table>
+
+</div>
+
+
+
+<div class="slide" style="height:60%">
+  <h1>Fundamental Invention of Unicode</h1>
+
+Rather than being yet another mapping from bit patterns to characters, Unicode did the computer-sciency thing and abstracted characters away from their bit pattern encodings.
+
+<br><br>
+
+Although you could argue that the 19th century Chinese telegraph code was the first use of "code-points" in the unicode sense:
+
+<center><img src="img/mullaney_telegraph_image02.jpg"></center>
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>16 bits is enough for anybody</h1>
+
+In the original unicode design document, Unicode 88, the designers never anticipated needing more than 2 bytes to store a code-point:
+
+<br><br>
+
+<blockquote>
+Unicode could be roughly described as "wide-body ASCII" that has been stretched to 16 bits to encompass the characters of all the world's living languages. In a properly engineered design, 16 bits per character are more than sufficient for this purpose.
+</blockquote>
+
+Needless to say, that didn't fly.
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>Encodings</h1>
+
+Any unicode code-point can be represented in various ways:
+
+<table>
+  <tr><th></th><th>UCS-2</th><th>UTF-16</th><th>UTF-8</th></tr>
+  <tr><td>%</td><td>00 25</td><td>00 25</td><td>25</td></tr>
+  <tr><td>&#x25a;</td><td>02 5A</td><td>02 5A</td><td>C9 9A</td></tr>
+  <tr><td>&#x2030;</td><td>20 30</td><td>20 30</td><td>E2 80 B0</td></tr>
+  <tr><td>&#x1f4c0;</td><td>&mdash;</td><td>D8 3D DC C0</td><td>F0 9F 93 80</td></tr>
+</table>
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>Unicode compression</h1>
+
+SCSU, BOCU-1
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>Mojibake</h1>
+
+When the decoding doesn't match the encoding you get annoyingly screwed up text like:
+
+<pre style="line-height: 1.8">
+$ perl -MEncode -E 'use encoding "utf-8"; say encode("utf8", "文字化け")'
+æå­åã
+</pre>
+
+The Japanese (who have suffered much more encoding anguish than we have) have a word for corruption due to encoding: <i>mojibake</i>.<br><br>
+
+Also why the heck are things like &#x2614; (U+2614) in Unicode? You can thank the Japanese for that too: They are in there to round-trip with Japanese character sets.
+
+</div>
+
+
+<div class="slide" style="height:60%">
+  <h1>UTF-16 curse</h1>
+
+Not all languages were as forward thinking as perl, and most just hacked in UCS-2 (later UTF-16):<br><br>
+
+Default python build exposes UTF-16 <i>surrogate pairs</i>:
+
+<pre>
+>>> print sys.maxunicode
+65535
+>>> print len(u"💩")
+2
+</pre>
+
+Python built with --enable-unicode=ucs4
+
+<pre>
+>>> print sys.maxunicode
+1114111
+>>> print len(u"💩")
+1
+</pre>
+</div>
+
+
+
+<div class="slide" style="height:60%">
+  <h1>Cursed truncation</h1>
+
+Because of the UTF-16 curse, Python can cut code-points in half:
+
+<pre>
+>>> print u"💩"[0:1]
+�
+</pre>
+
+Python 3.3 has taken steps to cure the UTF-16 curse by using UTF-8 internally (kinda), but Java/Windows/Javascript/etc are beyond redemption.<br><br>
+
+Ewwwwww gross:
+
+<pre>
+$ nodejs -e 'console.log("\ud83d\udca9")'
+💩
+</pre>
+
+Much better:
+
+<pre>
+$ perl -CAS -E 'say "\x{1f4a9}"'
+💩
+</pre>
+
+</div>
+
+
+
+<div class="slide">
+  <h1>UTF-8</h1>
+
+UCS-2 can't even represent all of unicode, and UTF-16 has numerous issues. One of which is that it can contain "NUL bytes" and therefore don't play well with C APIs that use NUL bytes as string terminators, for example in file/directory names.<br><br>
+
+UTF-8 was developed as a solution to this problem. In fact, it was originally called FSS-UTF (File System Safe UCS Transformation Format).
+
+<ul>
+  <li>No NUL bytes</li>
+  <li>ASCII compatible</li>
+  <li>No "byte order marks" needed</li>
+  <li>Self-synchronising</li>
+  <li>Invented by Ken Thompson on a napkin in a restaurant</li>
+</ul>
+</div>
+
+
+<div class="slide">
+  <h1>Varicode</h1>
+
+You can jump to any byte in UTF-8 encoded text and scan forward to find the next byte that starts with 0 or 11 bits: This is the start of a new character.<br><br>
+
+In amateur radio there is an encoding called <i>Varicode</i> which is self-synchronising at the bit-level:
+
+<ul>
+  <li>UTF-8 is variable bytes per character, Varicode is variable bits</li>
+  <li>More common characters get shorter codes, just like morse code. Space (U+0020) is 1 bit long: <b>1</b>. e (U+0065) is <b>11</b>. ^ (U+005E) is <b>1010111111</b></li>
+  <li>No code will contain the bit sequence "00" because this is the character separator</li>
+</ul>
+
+</div>
+
+
+<div class="slide">
+  <h1>Fibonacci codes</h1>
+
+How do you generate codes that don't contain a <b>00</b> (or <b>11</b>) bit sequence? With the Fibonacci sequence of course (did you think it was just for recursion homework? &#x1F601;)<br><br>
+
+Suppose we want the code for code-point 17. Pick the largest fibbonaci number less than or equal to 17 and subtract this number. Repeat for the remainder until there is none:
+
+<table>
+<tr><th></th><th>1</th><th>2</th><th>3</th><th>5</th><th>8</th><th>13</th><th>21</th><th></th></tr>
+<tr><th>&times;</th><th>1</th><th>0</th><th>1</th><th>0</th><th>0</th><th>1</th><th></th><th></th></tr>
+<tr><th>&Sigma;</th><th>1</th><th></th><th>3</th><th></th><th></th><th>13</th><th></th><th>= 17</th></tr>
+</table>
+
+This sequence is <b>100101</b>. Fibonacci sequences will never contain the bit-string <b>11</b>. If you want sequences that can contain <b>11</b> but never contain <b>111</b> there is the less-commonly known <i>Tribonacci</i> sequence (see the <i>N-bonacci</i> family).
+
+<table>
+</table>
+</div>
+
+
+
+<div class="slide">
+  <h1>Combining Characters</h1>
+
+So if we don't do silly things like operate on UTF-16 surrogates, and we understand synchronising boundaries like in UTF-8 then at least we can avoid truncating in the middle of characters right? Not so fast&hellip;<br><br>
+
+Unicode has a concept of "combining" characters (actually combining code-points). They are modifier code-points that change the previous code-point in some way.<br><br>
+
+For example, the U+0301 code point adds an acute accent:
+
+<pre style="padding-top: 50px; padding-bottom: 50px">
+  "ne\x{301}e"' : née
+</pre>
+
+Truncating after the second code-point would drop the accent which is a serious corruption of text in some languages.
+</div>
+
+
+<div class="slide">
+  <h1>Combining Characters: Thai</h1>
+
+In English we think of accents as decorative fluff, but they are fundamental to the encoding of some languages such as Thai:<br><br>
+
+<ul><li>
+"\x{E19}\x{E35}\x{E49}" :
+นี้
+<br>Nī̂ &mdash; "this"
+</li><li>
+"\x{E19}\x{E35}" :
+นี
+<br>Nī &mdash; "nice"
+</li><li>
+\x{E19} :
+น
+<br>N &mdash; "the"
+</li></ul>
+</div>
+
+
+<div class="slide">
+  <h1>Combining Characters: Misc</h1>
+
+Unicode 8 will even introduce combining characters change the skin colours of emoji:
+
+<img src="img/person.png"><img height=300px width=300px src="img/swatch-type-5.png"> <span style="font-size: 300px">→</span> <img src="img/person-5.png">
+</div>
+
+
+<div class="slide">
+  <h1>Normalisation Forms</h1>
+
+To complicate things more, often there are multiple representations for the same character (often because a combined character was present in an encoding Unicode provides round-tripping for).<br>
+
+<ul>
+  <li>In Normalisation Form Composed (NFC), é is represented as the single code-point U+00E9</li>
+  <li>In Normalisation Form Composed (NFD), é is represented with the combining character sequence "e" followed by U+301</li>
+  <li>Vast majority of unicode in the wild is in NFC</li>
+  <li>For some reason, OS X thought it would be a good idea to expose NFD to users of its filesystem.</li>
+</ul>
+</div>
+
+
+
+<div class="slide">
+  <h1>Extended Grapheme Clusters</h1>
+
+Hangul is special cased. Show the regexp.
+regional identifiers
+</div>
+
+
+<div class="slide">
+  <h1>Combining Grapheme Joiner</h1>
+
+By the way, if you want to prevent a combining mark from composing even under NFC, there's a character for that:<br><br>
+
+<pre>
+use Unicode::Normalize;
+
+say Dumper(NFC("e\x{34f}\x{301}"));
+
+## $VAR1 = "e\x{34f}\x{301}";
+</pre>
+
+<ul>
+  <li>The Combining Grapheme Joiner isn't actually a joiner, more like a separator</li>
+  <li>Also prevents the re-ordering of combining marks &mdash; don't ask</li>
+</ul>
+</div>
+
+
+<div class="slide">
+  <h1>How many bytes can a char take up?</h1>
+
+<table><tr><td style="color:black; font-size: 80%" width="30%" valign=top>
+<ul>
+  <li align=left>Technically no limit to number of combining characters</li>
+  <li align=left>UAX-15 recommends a limit of 30</li>
+  <li align=left>Largest "legitimate" use is Tibetan character with 8 combining marks</li>
+</ul>
+</td><td>
+<img width="100%" height="100%" src="img/combining-char-attack.jpg">
+</td></tr></table>
+</div>
+
+
+
+<div class="slide">
+  <h1>Over-long UTF-8</h1>
+</div>
+
+
+
+<div class="slide">
+  <h1>IDN homograph attacks</h1>
+</div>
+
+
+
+<div class="slide">
+  <h1>Inline::C</h1>
+
+<pre>
+use Inline C;
+
+print add(4, 9);
+
+__END__
+__C__
+int add(int x, int y) {
+  return x + y;
+}
+</pre>
+</div>
+
+
+<div class="slide">
+  <h1>Inline::Filters::Ragel</h1>
+
+<pre>
+use Inline C, filters => [ [ Ragel => '-G2' ] ];
+
+__END__
+__C__
+
+// C + ragel code goes here
+</pre>
+</div>
+
+
+<div class="slide">
+  <h1>Unicode::Truncate</h1>
+
+  Code walk-through...<br><br>
+</div>
+
+
+</div>
+</body>
+</html>
