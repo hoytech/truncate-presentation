@@ -4,7 +4,7 @@
 
 truncate-presentation - Presentation about Unicode::Truncate
 
-=live
+=head1 LIVE
 
 https://www.youtube.com/watch?v=123esmJWJTE&t=33m40s
 
