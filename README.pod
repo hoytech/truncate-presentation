@@ -4,6 +4,14 @@
 
 truncate-presentation - Presentation about Unicode::Truncate
 
+=live
+
+https://www.youtube.com/watch?v=123esmJWJTE&t=33m40s
+
+(resumes after technical difficulties)
+
+https://www.youtube.com/watch?v=123esmJWJTE&t=1h3m00s
+
 =head1 VIEW
 
 http://hoytech.github.io/truncate-presentation
