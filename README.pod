@@ -4,7 +4,7 @@
 
 truncate-presentation - Presentation about Unicode::Truncate
 
-=head1 LIVE
+=head1 VIDEO
 
 https://www.youtube.com/watch?v=123esmJWJTE&t=33m40s
 
@@ -12,7 +12,7 @@ https://www.youtube.com/watch?v=123esmJWJTE&t=33m40s
 
 https://www.youtube.com/watch?v=123esmJWJTE&t=1h3m00s
 
-=head1 VIEW
+=head1 SLIDES
 
 http://hoytech.github.io/truncate-presentation
 
